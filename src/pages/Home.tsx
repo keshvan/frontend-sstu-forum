@@ -45,6 +45,7 @@ export default function Home() {
             setError("Не удалось загрузить категории");
         } finally {
             setIsLoading(false);
+            console.log(categories);
         }
     }
 
@@ -55,7 +56,7 @@ export default function Home() {
     const onDelete = async (e: React.MouseEvent, categoryId: number) => {
         e.preventDefault();
         try {
-            ForumService.deleteCategory(categoryId);
+            await ForumService.deleteCategory(categoryId);
         } catch {
             alert("Ошибка в удалении категории");
         }
@@ -97,6 +98,7 @@ export default function Home() {
         setEditOpen(false);
         setDescription('');
         setTitle('');
+        setCategoryId(null);
     }
 
     const openEdit = (categoryId: number, title: string, description: string) => {
@@ -155,7 +157,7 @@ export default function Home() {
             {editOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
-                        <h2 className="text-lg font-semibold mb-4">Редактирование темы</h2>
+                        <h2 className="text-lg font-semibold mb-4">Редактирование категории</h2>
                         <form onSubmit={editCategory}>
                             <input
                                 type="text"
@@ -173,7 +175,7 @@ export default function Home() {
                             />
                             <div className="flex justify-end space-x-2">
                                 <button
-                                    onClick={() => {setEditOpen(false); setTitle(''); setDescription('')}}
+                                    onClick={() => {setEditOpen(false); setTitle(''); setDescription(''); setCategoryId(null)}}
                                     className="px-3 py-1 text-sm bg-gray-300 rounded hover:bg-gray-400"
                                 >
                                     Отмена

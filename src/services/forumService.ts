@@ -89,6 +89,11 @@ export const ForumService = {
     },
 
     updateCategory: async (categoryId: number, title: string, description: string): Promise<{ success: boolean }> => {
+        if (!categoryId) {
+            throw new Error('Category ID is required');
+        }
+
+
         if (title === '') {
             throw new Error('Title is required')
         }
@@ -151,6 +156,32 @@ export const ForumService = {
             return res.data.id;
         } catch (error) {
             throw error;
+        }
+    },
+
+    deleteTopic: async (topicId: number): Promise<{success: boolean}> => {
+        if (!topicId) {
+            throw new Error('Topic ID is required');
+        }
+
+        try {
+            await forumApi.delete(`/topics/${topicId}`);
+            return { success: true }
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    updateTopic: async (topicId: number,  title: string): Promise<{success: boolean}> => {
+        if (title === '') {
+            throw new Error('Title is required')
+        }
+
+        try {
+            await forumApi.patch(`/topics/${topicId}`, { title: title })
+            return {success: true}
+        } catch (error) {
+            throw error
         }
     },
 

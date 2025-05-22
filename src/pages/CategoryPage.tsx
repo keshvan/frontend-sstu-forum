@@ -13,6 +13,8 @@ export default function CategoryPage() {
     const [error, setError] = useState<string | null>(null);
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
     const [title, setTitle] = useState<string>('');
+    const [topicId, setTopicId] = useState<number | null>(null);
+    const [editOpen, setEditOpen] = useState<boolean>(false);
     const { user } = useAuth()
 
     const fetchTopics = async () => {
@@ -33,8 +35,9 @@ export default function CategoryPage() {
                 setIsLoading(false);
             }
         }
+        console.log(topics);
     }
-    
+
     useEffect(() => {
         fetchTopics();
     }, [id])
@@ -50,8 +53,42 @@ export default function CategoryPage() {
                 setError('Ошибка при создания топика')
             }
         }
-
+        setMenuOpen(false);
         fetchTopics();
+    }
+
+    const onDelete = async (e: React.MouseEvent, topicId: number) => {
+        e.preventDefault();
+        try {
+            await ForumService.deleteTopic(topicId);
+        } catch {
+            alert("Ошибка в удалении категории");
+        }
+        setTopics(topics.filter(n => n.id !== topicId));
+    }
+
+    const openEdit = (topicId: number, title: string) => {
+        setTopicId(topicId);
+        setTitle(title);
+        setEditOpen(true);
+    }
+
+    const editTopic = async (event: React.FormEvent) => {
+        event.preventDefault();
+        if (title && title !== '' && topicId) {
+            try {
+                await ForumService.updateTopic(topicId, title);
+            } catch (error) {
+                console.log(error)
+                setError('Ошибка при обновлении категории')
+            }
+        } else {
+            return
+        }
+        fetchTopics();
+        setEditOpen(false);
+        setTitle('');
+        setTopicId(null);
     }
 
     if (isLoading) {
@@ -71,24 +108,55 @@ export default function CategoryPage() {
                             <h2 className="text-lg font-semibold mb-4">Создание новой темы</h2>
                             <form onSubmit={createTopic}>
                                 <input
-                                  type="text"
-                                  placeholder="Заголовок"
-                                  className="w-full mb-3 p-2 border rounded"
-                                  onChange={(e) => setTitle(e.target.value)}
+                                    type="text"
+                                    placeholder="Заголовок"
+                                    className="w-full mb-3 p-2 border rounded"
+                                    onChange={(e) => setTitle(e.target.value)}
                                 />
                                 <div className="flex justify-end space-x-2">
-                                  <button
-                                    onClick={() => setMenuOpen(false)}
-                                    className="px-3 py-1 text-sm bg-gray-300 rounded hover:bg-gray-400"
-                                  >
-                                    Отмена
-                                  </button>
-                                  <button
-                                    type="submit"
-                                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                                  >
-                                    Создать
-                                  </button>
+                                    <button
+                                        onClick={() => setMenuOpen(false)}
+                                        className="px-3 py-1 text-sm bg-gray-300 rounded hover:bg-gray-400"
+                                    >
+                                        Отмена
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    >
+                                        Создать
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {editOpen && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
+                            <h2 className="text-lg font-semibold mb-4">Редактирование темы</h2>
+                            <form onSubmit={editTopic}>
+                                <input
+                                    type="text"
+                                    placeholder="Заголовок"
+                                    className="w-full mb-3 p-2 border rounded"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                />
+                                <div className="flex justify-end space-x-2">
+                                    <button
+                                        onClick={() => { setEditOpen(false); setTitle(''); setTopicId(null) }}
+                                        className="px-3 py-1 text-sm bg-gray-300 rounded hover:bg-gray-400"
+                                    >
+                                        Отмена
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    >
+                                        Сохранить
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -97,10 +165,10 @@ export default function CategoryPage() {
                 <h1 className="text-xl font-bold border-b border-gray-300 bg-gray-100 px-2 py-1 mb-2">{category.title}</h1>
                 <p className="text-gray-700 px-2 mb-3">{category.description}</p>
                 {user && (<button onClick={() => setMenuOpen(true)} className="m-2 flex justify-self-end justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300">Новая тема</button>)}
-                {topics.length === 0 ? (
+                {(!topics || topics.length === 0) ? (
                     <p className="px-2">Тем пока нет.</p>
                 ) : (
-                    topics.map(topic => (<TopicItem key={topic.id} topic={topic} categoryId={id} /> ))
+                    topics.map(topic => (<TopicItem key={topic.id} topic={topic} categoryId={id} onDelete={onDelete} openEdit={openEdit} />))
                 )}
             </div>
         )

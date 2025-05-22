@@ -77,7 +77,7 @@ export default function TopicPage() {
     const onDelete = async (e: React.MouseEvent , postId: number) => {
         e.preventDefault();
         try {
-			ForumService.deletePost(postId);
+			await ForumService.deletePost(postId);
 		} catch {
 			alert("Ошибка в удалении поста");
 		}
